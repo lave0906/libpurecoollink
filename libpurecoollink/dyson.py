@@ -14,7 +14,7 @@ from .exceptions import DysonNotLoggedException
 
 _LOGGER = logging.getLogger(__name__)
 
-DYSON_API_URL = "api.cp.dyson.cn"
+DYSON_API_URL = "api.cp.dyson.com"
 
 
 class DysonAccount:
@@ -22,7 +22,6 @@ class DysonAccount:
 
     def __init__(self, email, password, country):
         """Create a new Dyson account.
-
         :param email: User email
         :param password: User password
         :param country: 2 characters language code
@@ -32,6 +31,9 @@ class DysonAccount:
         self._country = country
         self._logged = False
         self._auth = None
+        self._api = DYSON_API_URL
+        if self._country == 'CN':
+            self._api = "api.cp.dyson.cn"
 
     def login(self):
         """Login to dyson web services."""
@@ -41,7 +43,7 @@ class DysonAccount:
         }
         login = requests.post(
             "https://{0}/v1/userregistration/authenticate?country={1}".format(
-                DYSON_API_URL, self._country), request_body, verify=False)
+                self._api, self._country), request_body, verify=False)
         # pylint: disable=no-member
         if login.status_code == requests.codes.ok:
             json_response = login.json()
@@ -57,7 +59,7 @@ class DysonAccount:
         if self._logged:
             device_response = requests.get(
                 "https://{0}/v1/provisioningservice/manifest".format(
-                    DYSON_API_URL), verify=False, auth=self._auth)
+                    self._api), verify=False, auth=self._auth)
             devices = []
             for device in device_response.json():
                 if is_360_eye_device(device):
